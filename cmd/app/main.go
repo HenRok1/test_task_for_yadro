@@ -68,15 +68,15 @@ func main() {
 	}
 	fmt.Println(payCost)
 
-	tables := make([]club.TableState, numTables)
+	tables := make([]club.Club, numTables)
 	for i := range tables {
-		tables[i].TableNumber = i + 1
+		tables[i].Tables = i + 1
 	}
 
 	for scanner.Scan() {
 		line := scanner.Text()
 		eventFields := strings.Split(line, " ")
-		_, err := time.Parse("15:04", eventFields[0])
+		timestamp, err := time.Parse("15:04", eventFields[0])
 		if err != nil {
 			fmt.Println("Ошибка в формате времени:", eventFields[0])
 			return
@@ -89,35 +89,39 @@ func main() {
 		fmt.Println(eventFields)
 
 		// timestamp := eventFields[0]
-		// eventID, err := strconv.Atoi(eventFields[1])
-		// if err != nil {
-		// 	log.Fatal("Ошибка формата: неверный ID события")
-		// }
+		eventID, err := strconv.Atoi(eventFields[1])
+		if err != nil {
+			fmt.Println("Ошибка в формате:", eventFields[1])
+			return
+		}
 
-		// switch eventID {
-		// case 1:
-		// 	// Обработка события "Клиент пришел"
-		// 	clientName := eventFields[2]
-		// 	handleClientArrival(clientName, tables, workHours, timestamp)
-		// case 2:
-		// 	// Обработка события "Клиент сел за стол"
-		// 	clientName := eventFields[2]
-		// 	tableNumber, err := strconv.Atoi(eventFields[3])
-		// 	if err != nil {
-		// 		log.Fatal("Ошибка формата: неверный номер стола")
-		// 	}
-		// 	handleClientSeated(clientName, tableNumber, tables, workHours, pricePerHour, timestamp)
-		// case 3:
-		// 	// Обработка события "Клиент ожидает"
-		// 	clientName := eventFields[2]
-		// 	handleClientWaiting(clientName, tables, timestamp)
-		// case 4:
-		// 	// Обработка события "Клиент ушел"
-		// 	clientName := eventFields[2]
-		// 	handleClientDeparture(clientName, tables, timestamp)
-		// default:
-		// 	log.Fatal("Ошибка формата: неизвестный ID события")
-		// }
+		switch eventID {
+		case 1:
+			// Обработка события "Клиент пришел"
+			clientName := eventFields[2]
+
+			
+
+			// case 2:
+			// 	// Обработка события "Клиент сел за стол"
+			// 	clientName := eventFields[2]
+			// 	tableNumber, err := strconv.Atoi(eventFields[3])
+			// 	if err != nil {
+			// 		log.Fatal("Ошибка формата: неверный номер стола")
+			// 	}
+			// 	handleClientSeated(clientName, tableNumber, tables, workHours, pricePerHour, timestamp)
+			// case 3:
+			// 	// Обработка события "Клиент ожидает"
+			// 	clientName := eventFields[2]
+			// 	handleClientWaiting(clientName, tables, timestamp)
+			// case 4:
+			// 	// Обработка события "Клиент ушел"
+			// 	clientName := eventFields[2]
+			// 	handleClientDeparture(clientName, tables, timestamp)
+			// default:
+			// 	log.Fatal("Ошибка формата: неизвестный ID события")
+			// }
+		}
 	}
 
 }
