@@ -34,7 +34,7 @@ func main() {
 		fmt.Println("Ошибка формата в первой строке", numTables)
 		return
 	}
-	fmt.Println(numTables)
+	fmt.Printf("количество столов: %d\n", numTables)
 
 	// Считываем время начала и окончания работы клуба
 	scanner.Scan()
@@ -50,78 +50,104 @@ func main() {
 		return
 	}
 
-	fmt.Println(openTime)
+	fmt.Printf("Время открытия клуба: %v\n", openTime)
 
 	closeTime, err := time.Parse("15:04", openCloseTimes[1])
 	if err != nil {
-		fmt.Println("Ошибики формата в третьей строке")
+		fmt.Println("Ошибики формата во второй строке")
 		return
 	}
 
-	fmt.Println(closeTime)
+	fmt.Printf("Время закрытия клуба: %v\n", closeTime)
 
 	scanner.Scan()
 	payCost, err := strconv.Atoi(scanner.Text())
 	if err != nil {
-		fmt.Println("Ошибка в четвертой строке", payCost)
+		fmt.Println("Ошибка в третьей строке", payCost)
 		return
 	}
-	fmt.Println(payCost)
+	fmt.Printf("Стоимость в клубе: %d\n", payCost)
 
-	tables := make([]club.Club, numTables)
-	for i := range tables {
-		tables[i].Tables = i + 1
-	}
+	club := club.NewClub(numTables, openTime, closeTime, payCost)
+
+	fmt.Println()
+
+	fmt.Println(openCloseTimes[0])
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		eventFields := strings.Split(line, " ")
-		timestamp, err := time.Parse("15:04", eventFields[0])
+		event := strings.Fields(line)
+		// Проверка формата входных данных
+		if len(event) < 2 {
+			fmt.Printf("Ошибка формата на строке: %s\n", line)
+			return
+		}
+
+		t, err := time.Parse("15:04", event[0])
 		if err != nil {
-			fmt.Println("Ошибка в формате времени:", eventFields[0])
+			fmt.Printf("Ошибка формата на строке: %s\n", line)
 			return
 		}
 
-		if len(eventFields) != 3 {
-			fmt.Println("Ошибка формата: неверное событие", eventFields)
-			return
-		}
-		fmt.Println(eventFields)
-
-		// timestamp := eventFields[0]
-		eventID, err := strconv.Atoi(eventFields[1])
+		eventCode, err := strconv.Atoi(event[1])
 		if err != nil {
-			fmt.Println("Ошибка в формате:", eventFields[1])
+			fmt.Printf("Ошибка формата на строке: %s\n", line)
 			return
 		}
 
-		switch eventID {
-		case 1:
-			// Обработка события "Клиент пришел"
-			clientName := eventFields[2]
+		switch eventCode {
+		case 1: // Клиент пришел
+			if len(event) < 3 {
+				fmt.Printf("Ошибка формата на строке: %s\n", line)
+				return
+			}
 
-			
+			err = club.HandleClientArrival(t, event[2])
+			if err != nil {
+				fmt.Printf("%s\n", err)
+			}
+		case 2: // Клиент сел за стол
+			if len(event) < 4 {
+				fmt.Printf("Ошибка формата на строке: %s\n", line)
+				return
+			}
 
-			// case 2:
-			// 	// Обработка события "Клиент сел за стол"
-			// 	clientName := eventFields[2]
-			// 	tableNumber, err := strconv.Atoi(eventFields[3])
-			// 	if err != nil {
-			// 		log.Fatal("Ошибка формата: неверный номер стола")
-			// 	}
-			// 	handleClientSeated(clientName, tableNumber, tables, workHours, pricePerHour, timestamp)
-			// case 3:
-			// 	// Обработка события "Клиент ожидает"
-			// 	clientName := eventFields[2]
-			// 	handleClientWaiting(clientName, tables, timestamp)
-			// case 4:
-			// 	// Обработка события "Клиент ушел"
-			// 	clientName := eventFields[2]
-			// 	handleClientDeparture(clientName, tables, timestamp)
-			// default:
-			// 	log.Fatal("Ошибка формата: неизвестный ID события")
-			// }
+			tableNum, err := strconv.Atoi(event[3])
+			if err != nil {
+				fmt.Printf("Ошибка формата на строке: %s\n", line)
+				return
+			}
+
+			err = club.HandleClientSeat(t, event[2], tableNum)
+			if err != nil {
+				fmt.Printf("%s\n", err)
+			}
+		case 3: // Клиент ожидает
+			if len(event) < 3 {
+				fmt.Printf("Ошибка формата на строке: %s\n", line)
+				return
+			}
+
+			err = club.HandleClientWait(t, event[2])
+			if err != nil {
+				fmt.Printf("%s\n", err)
+			}
+		case 4: // Клиент ушел
+			if len(event) < 3 {
+				fmt.Printf("Ошибка формата на строке: %s\n", line)
+				return
+			}
+
+			err = club.HandleClientLeave(t, event[2])
+			if err != nil {
+				fmt.Printf("%s\n", err)
+			}
+		default:
+			fmt.Printf("Неизвестный код события на строке: %s\n", line)
+			return
 		}
 	}
 
+	club.CalculateRevenue()
+	club.PrintClubStatus()
 }
