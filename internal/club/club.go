@@ -85,7 +85,6 @@ func (c *Club) HandleClientWait(t time.Time, name string) error {
 		c.HandleClientLeave(t, name)
 		return errors.New("ICanWaitNoLonger")
 	}
-
 	c.WaitingQueue = append(c.WaitingQueue, name)
 	return nil
 }
@@ -122,11 +121,11 @@ func (c *Club) CalculateRevenue() {
 }
 
 func (c *Club) PrintClubStatus() {
-	fmt.Println(c.OpenTime.Format(time.Stamp))
+	fmt.Println(c.OpenTime.Format(time.TimeOnly))
 	for val := range c.CurrentClients {
 		fmt.Printf("%s\n", val)
 	}
-	fmt.Println(c.CloseTime.Format(time.Stamp))
+	defer fmt.Println(c.CloseTime.Format(time.Stamp))
 
 	tables := make([]int, 0)
 	for tableNum := range c.TableOccupation {
@@ -137,6 +136,6 @@ func (c *Club) PrintClubStatus() {
 		duration := c.TableOccupation[tableNum]
 		hours := int(duration.Hours())
 		minutes := int(duration.Minutes()) % 60
-		fmt.Printf("%d %02d:%02d\n", tableNum, c.TablePrice*hours, minutes)
+		fmt.Printf("%d %d %02d:%02d\n", tableNum, c.Revenue, c.TablePrice*hours, minutes)
 	}
 }

@@ -18,6 +18,7 @@ func main() {
 	}
 
 	filePath := os.Args[1]
+	// filePath := "../../files/test.txt"
 	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println("Не удалось открыть файл:", err)
@@ -34,7 +35,7 @@ func main() {
 		fmt.Println("Ошибка формата в первой строке", numTables)
 		return
 	}
-	fmt.Printf("количество столов: %d\n", numTables)
+	// fmt.Printf("количество столов: %d\n", numTables)
 
 	// Считываем время начала и окончания работы клуба
 	scanner.Scan()
@@ -50,7 +51,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf("Время открытия клуба: %v\n", openTime)
+	// fmt.Printf("Время открытия клуба: %v\n", openTime)
 
 	closeTime, err := time.Parse("15:04", openCloseTimes[1])
 	if err != nil {
@@ -58,7 +59,7 @@ func main() {
 		return
 	}
 
-	fmt.Printf("Время закрытия клуба: %v\n", closeTime)
+	// fmt.Printf("Время закрытия клуба: %v\n", closeTime)
 
 	scanner.Scan()
 	payCost, err := strconv.Atoi(scanner.Text())
@@ -66,11 +67,13 @@ func main() {
 		fmt.Println("Ошибка в третьей строке", payCost)
 		return
 	}
-	fmt.Printf("Стоимость в клубе: %d\n", payCost)
+	// fmt.Printf("Стоимость в клубе: %d\n", payCost)
 
 	club := club.NewClub(numTables, openTime, closeTime, payCost)
 
 	fmt.Println()
+
+	/////////////////////////////////////////////////////////////////////////////////////
 
 	fmt.Println(openCloseTimes[0])
 
@@ -94,6 +97,7 @@ func main() {
 			fmt.Printf("Ошибка формата на строке: %s\n", line)
 			return
 		}
+		fmt.Println(line)
 
 		switch eventCode {
 		case 1: // Клиент пришел
@@ -104,7 +108,7 @@ func main() {
 
 			err = club.HandleClientArrival(t, event[2])
 			if err != nil {
-				fmt.Printf("%s\n", err)
+				fmt.Printf("%s %d %s\n", event[0], 13, err)
 			}
 		case 2: // Клиент сел за стол
 			if len(event) < 4 {
@@ -120,7 +124,7 @@ func main() {
 
 			err = club.HandleClientSeat(t, event[2], tableNum)
 			if err != nil {
-				fmt.Printf("%s\n", err)
+				fmt.Printf("%s %d %s\n", event[0], 13, err)
 			}
 		case 3: // Клиент ожидает
 			if len(event) < 3 {
@@ -149,5 +153,6 @@ func main() {
 	}
 
 	club.CalculateRevenue()
+	// fmt.Println(club.Revenue)
 	club.PrintClubStatus()
 }
