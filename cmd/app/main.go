@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/HenRok1/test_task_for_yadro/internal/club"
+	"github.com/HenRok1/test_task_for_yadro/internal/io"
 )
 
 func main() {
@@ -29,45 +30,54 @@ func main() {
 	scanner := bufio.NewScanner(file)
 
 	// Считываем количество столов
-	scanner.Scan()
-	numTables, err := strconv.Atoi(scanner.Text())
-	if err != nil {
-		fmt.Println("Ошибка формата в первой строке", numTables)
-		return
-	}
+	numTables := io.ReadTables(file, scanner)
+
+	// scanner.Scan()
+	// numTables, err := strconv.Atoi(scanner.Text())
+	// if err != nil {
+	// 	fmt.Println("Ошибка формата в первой строке", numTables)
+	// 	return
+	// }
 	// fmt.Printf("количество столов: %d\n", numTables)
 
 	// Считываем время начала и окончания работы клуба
-	scanner.Scan()
-	openCloseTimes := strings.Split(scanner.Text(), " ")
-	if len(openCloseTimes) != 2 {
-		fmt.Println("Ошибка формата во второй строке", openCloseTimes)
-		return
-	}
+	openCloseTimes := io.ReadTime(file, scanner)
 
-	openTime, err := time.Parse("15:04", openCloseTimes[0])
-	if err != nil {
-		fmt.Println("Ошибка формата во второй строке")
-		return
-	}
+	// scanner.Scan()
+	// openCloseTimes := strings.Split(scanner.Text(), " ")
+	// if len(openCloseTimes) != 2 {
+	// 	fmt.Println("Ошибка формата во второй строке", openCloseTimes)
+	// 	return
+	// }
 
-	// fmt.Printf("Время открытия клуба: %v\n", openTime)
+	openTime, closeTime := io.ParseOpenCloseTime(openCloseTimes)
 
-	closeTime, err := time.Parse("15:04", openCloseTimes[1])
-	if err != nil {
-		fmt.Println("Ошибики формата во второй строке")
-		return
-	}
+	// openTime, err := time.Parse("15:04", openCloseTimes[0])
+	// if err != nil {
+	// 	fmt.Println("Ошибка формата во второй строке")
+	// 	return
+	// }
+
+	// // fmt.Printf("Время открытия клуба: %v\n", openTime)
+
+	// closeTime, err := time.Parse("15:04", openCloseTimes[1])
+	// if err != nil {
+	// 	fmt.Println("Ошибики формата во второй строке")
+	// 	return
+	// }
 
 	// fmt.Printf("Время закрытия клуба: %v\n", closeTime)
 
-	scanner.Scan()
-	payCost, err := strconv.Atoi(scanner.Text())
-	if err != nil {
-		fmt.Println("Ошибка в третьей строке", payCost)
-		return
-	}
-	// fmt.Printf("Стоимость в клубе: %d\n", payCost)
+	//Считываение стоимости часа в клубе
+	// scanner.Scan()
+	// payCost, err := strconv.Atoi(scanner.Text())
+	// if err != nil {
+	// 	fmt.Println("Ошибка в третьей строке", payCost)
+	// 	return
+	// }
+	// // fmt.Printf("Стоимость в клубе: %d\n", payCost)
+
+	payCost := io.ReadCost(file, scanner)
 
 	club := club.NewClub(numTables, openTime, closeTime, payCost)
 
