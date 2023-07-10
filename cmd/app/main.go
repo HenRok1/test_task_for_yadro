@@ -19,7 +19,6 @@ func main() {
 	}
 
 	filePath := os.Args[1]
-	// filePath := "../../files/test.txt"
 	file, err := os.Open(filePath)
 	if err != nil {
 		fmt.Println("Не удалось открыть файл:", err)
@@ -32,56 +31,15 @@ func main() {
 	// Считываем количество столов
 	numTables := io.ReadTables(file, scanner)
 
-	// scanner.Scan()
-	// numTables, err := strconv.Atoi(scanner.Text())
-	// if err != nil {
-	// 	fmt.Println("Ошибка формата в первой строке", numTables)
-	// 	return
-	// }
-	// fmt.Printf("количество столов: %d\n", numTables)
-
 	// Считываем время начала и окончания работы клуба
 	openCloseTimes := io.ReadTime(file, scanner)
 
-	// scanner.Scan()
-	// openCloseTimes := strings.Split(scanner.Text(), " ")
-	// if len(openCloseTimes) != 2 {
-	// 	fmt.Println("Ошибка формата во второй строке", openCloseTimes)
-	// 	return
-	// }
-
 	openTime, closeTime := io.ParseOpenCloseTime(openCloseTimes)
 
-	// openTime, err := time.Parse("15:04", openCloseTimes[0])
-	// if err != nil {
-	// 	fmt.Println("Ошибка формата во второй строке")
-	// 	return
-	// }
-
-	// // fmt.Printf("Время открытия клуба: %v\n", openTime)
-
-	// closeTime, err := time.Parse("15:04", openCloseTimes[1])
-	// if err != nil {
-	// 	fmt.Println("Ошибики формата во второй строке")
-	// 	return
-	// }
-
-	// fmt.Printf("Время закрытия клуба: %v\n", closeTime)
-
 	//Считываение стоимости часа в клубе
-	// scanner.Scan()
-	// payCost, err := strconv.Atoi(scanner.Text())
-	// if err != nil {
-	// 	fmt.Println("Ошибка в третьей строке", payCost)
-	// 	return
-	// }
-	// // fmt.Printf("Стоимость в клубе: %d\n", payCost)
-
 	payCost := io.ReadCost(file, scanner)
 
 	club := club.NewClub(numTables, openTime, closeTime, payCost)
-
-	fmt.Println()
 
 	/////////////////////////////////////////////////////////////////////////////////////
 

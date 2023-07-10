@@ -9,23 +9,6 @@ import (
 	"time"
 )
 
-// func ParseFile(filePath string) (numTables int, openTime, closeTime time.Time, payCost int, err error) {
-// 	file, err := os.Open(filePath)
-// 	if err != nil {
-// 		fmt.Println("Не удалось открыть файл:", err)
-// 		return
-// 	}
-// 	defer file.Close()
-
-// 	scanner := bufio.NewScanner(file)
-
-// 	numTables, err = ReadTables(file, scanner)
-// 	if err != nil {
-// 		return
-// 	}
-
-// }
-
 func ReadTables(file *os.File, scanner *bufio.Scanner) (numTables int) {
 	scanner.Scan()
 
