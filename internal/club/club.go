@@ -1,24 +1,14 @@
 package club
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"sort"
+	"strconv"
+	"strings"
 	"time"
 )
-
-// type TableState struct {
-// 	TableNumber int
-// 	Client      *Client
-// 	TotalHours  int
-// 	TablePrice  int
-// }
-
-// type Client struct {
-// 	Name     string
-// 	Table    int
-// 	QueuePos int
-// }
 
 type Club struct {
 	Tables          int
@@ -138,4 +128,91 @@ func (c *Club) PrintClubStatus() {
 		minutes := int(duration.Minutes()) % 60
 		fmt.Printf("%d %d %02d:%02d\n", tableNum, c.Revenue, c.TablePrice*hours, minutes)
 	}
+}
+
+func (c *Club) HandleEvents(scanner *bufio.Scanner) {
+	c.Tables = 0
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		event := strings.Fields(line)
+		// Проверка формата входных данных
+		if len(event) < 2 {
+			fmt.Printf("Ошибка формата на строке: %s\n", line)
+			return
+		}
+
+		t, err := time.Parse("15:04", event[0])
+		if err != nil {
+			fmt.Printf("Ошибка формата на строке: %s\n", line)
+			return
+		}
+
+		eventCode, err := strconv.Atoi(event[1])
+		if err != nil {
+			fmt.Printf("Ошибка формата на строке: %s\n", line)
+			return
+		}
+		fmt.Println(line)
+		c.HandleEventCode(eventCode, event, t, line)
+	}
+
+	c.CalculateRevenue()
+	// fmt.Println(club.Revenue)
+	c.PrintClubStatus()
+}
+
+func (c *Club) HandleEventCode(evenCode int, event []string, t time.Time, line string) (err error) {
+	switch evenCode {
+	case 1: // Клиент пришел
+		if len(event) < 3 {
+			fmt.Printf("Ошибка формата на строке: %s\n", line)
+			return
+		}
+
+		err = c.HandleClientArrival(t, event[2])
+		if err != nil {
+			fmt.Printf("%s %d %s\n", event[0], 13, err)
+		}
+	case 2: // Клиент сел за стол
+		if len(event) < 4 {
+			fmt.Printf("Ошибка формата на строке: %s\n", line)
+			return
+		}
+
+		tableNum, err := strconv.Atoi(event[3])
+		if err != nil {
+			fmt.Printf("Ошибка формата на строке: %s\n", line)
+			return nil
+		}
+
+		err = c.HandleClientSeat(t, event[2], tableNum)
+		if err != nil {
+			fmt.Printf("%s %d %s\n", event[0], 13, err)
+		}
+	case 3: // Клиент ожидает
+		if len(event) < 3 {
+			fmt.Printf("Ошибка формата на строке: %s\n", line)
+			return
+		}
+
+		err = c.HandleClientWait(t, event[2])
+		if err != nil {
+			fmt.Printf("%s\n", err)
+		}
+	case 4: // Клиент ушел
+		if len(event) < 3 {
+			fmt.Printf("Ошибка формата на строке: %s\n", line)
+			return
+		}
+
+		err = c.HandleClientLeave(t, event[2])
+		if err != nil {
+			fmt.Printf("%s\n", err)
+		}
+	default:
+		fmt.Printf("Неизвестный код события на строке: %s\n", line)
+		return
+	}
+	return nil
 }

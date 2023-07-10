@@ -10,8 +10,8 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Не указан путь к файлу")
+	if len(os.Args) != 2 { 
+		fmt.Println("Не указан путь к файлу или некорректный ввод аргументов")
 		return
 	}
 
@@ -36,10 +36,9 @@ func main() {
 	//Считываение стоимости часа в клубе
 	payCost := io.ReadCost(file, scanner)
 
-	club := club.NewClub(numTables, openTime, closeTime, payCost)
+	myClub := club.NewClub(numTables, openTime, closeTime, payCost)
 
 	fmt.Println(openCloseTimes[0])
 
-	io.HandleEvents(scanner, club)
-
+	myClub.HandleEvents(scanner)
 }
