@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const errorNum = 13
+
 type Club struct {
 	Tables          int
 	OpenTime        time.Time
@@ -34,28 +36,28 @@ func NewClub(tables int, openTime, closeTime time.Time, tablePrice int) *Club {
 	}
 }
 
-func (c *Club) HandleClientArrival(t time.Time, name string) error {
+func (c *Club) HandleClientArrival(t time.Time, name string) (errNum int, err error) {
 	if _, ok := c.CurrentClients[name]; ok {
-		return errors.New("YouShallNotPass")
+		return errorNum, errors.New("YouShallNotPass")
 	}
 	if !c.IsOpen(t) {
-		return errors.New("NotOpenYet")
+		return errorNum, errors.New("NotOpenYet")
 	}
 
 	c.CurrentClients[name] = true
-	return nil
+	return 0, nil
 }
 
 func (c *Club) IsOpen(timestamp time.Time) bool {
 	return timestamp.After(c.OpenTime) && timestamp.Before(c.CloseTime)
 }
 
-func (c *Club) HandleClientSeat(t time.Time, name string, tableNumber int) error {
+func (c *Club) HandleClientSeat(t time.Time, name string, tableNumber int) (errNum int, err error) {
 	if _, ok := c.CurrentClients[name]; !ok {
-		return errors.New("ClientUnknown")
+		return errorNum, errors.New("ClientUnknown")
 	}
 	if c.TableOccupation[tableNumber] > 0 && c.TableOccupation[tableNumber] <= c.CloseTime.Sub(c.OpenTime) {
-		return errors.New("PlaceIsBusy")
+		return errorNum, errors.New("PlaceIsBusy")
 	}
 
 	if c.TableOccupation[tableNumber] == 0 {
@@ -67,16 +69,17 @@ func (c *Club) HandleClientSeat(t time.Time, name string, tableNumber int) error
 	}
 
 	c.CurrentClients[name] = true
-	return nil
+	return 0, nil
 }
 
-func (c *Club) HandleClientWait(t time.Time, name string) error {
-	if len(c.WaitingQueue) >= c.Tables {
+// TODO: переделать
+func (c *Club) HandleClientWait(t time.Time, name string) (errNum int, err error) {
+	if len(c.WaitingQueue) >= 0 {
 		c.HandleClientLeave(t, name)
-		return errors.New("ICanWaitNoLonger")
+		return errorNum, errors.New("ICanWaitNoLonger")
 	}
 	c.WaitingQueue = append(c.WaitingQueue, name)
-	return nil
+	return 0, nil
 }
 
 func (c *Club) HandleClientLeave(t time.Time, name string) error {
@@ -170,9 +173,9 @@ func (c *Club) HandleEventCode(evenCode int, event []string, t time.Time, line s
 			return
 		}
 
-		err = c.HandleClientArrival(t, event[2])
+		errNum, err := c.HandleClientArrival(t, event[2])
 		if err != nil {
-			fmt.Printf("%s %d %s\n", event[0], 13, err)
+			fmt.Printf("%s %d %s\n", event[0], errNum, err)
 		}
 	case 2: // Клиент сел за стол
 		if len(event) < 4 {
@@ -186,9 +189,9 @@ func (c *Club) HandleEventCode(evenCode int, event []string, t time.Time, line s
 			return nil
 		}
 
-		err = c.HandleClientSeat(t, event[2], tableNum)
+		errNum, err := c.HandleClientSeat(t, event[2], tableNum)
 		if err != nil {
-			fmt.Printf("%s %d %s\n", event[0], 13, err)
+			fmt.Printf("%s %d %s\n", event[0], errNum, err)
 		}
 	case 3: // Клиент ожидает
 		if len(event) < 3 {
@@ -196,9 +199,9 @@ func (c *Club) HandleEventCode(evenCode int, event []string, t time.Time, line s
 			return
 		}
 
-		err = c.HandleClientWait(t, event[2])
+		errNum, err := c.HandleClientWait(t, event[2])
 		if err != nil {
-			fmt.Printf("%s\n", err)
+			fmt.Printf("%s %d %s\n", event[0], errNum, err)
 		}
 	case 4: // Клиент ушел
 		if len(event) < 3 {

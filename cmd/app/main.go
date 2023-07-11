@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 2 { 
+	if len(os.Args) != 2 {
 		fmt.Println("Не указан путь к файлу или некорректный ввод аргументов")
 		return
 	}
@@ -30,7 +30,6 @@ func main() {
 
 	// Считываем время начала и окончания работы клуба
 	openCloseTimes := io.ReadTime(file, scanner)
-
 	openTime, closeTime := io.ParseOpenCloseTime(openCloseTimes)
 
 	//Считываение стоимости часа в клубе
@@ -38,7 +37,7 @@ func main() {
 
 	myClub := club.NewClub(numTables, openTime, closeTime, payCost)
 
-	fmt.Println(openCloseTimes[0])
+	// fmt.Println(openCloseTimes[0])
 
 	myClub.HandleEvents(scanner)
 }
