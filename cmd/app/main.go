@@ -10,10 +10,12 @@ import (
 )
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Println("Не указан путь к файлу или некорректный ввод аргументов")
-		return
-	}
+	// if len(os.Args) != 2 {
+	// 	fmt.Println("Не указан путь к файлу или некорректный ввод аргументов")
+	// 	return
+	// }
+
+	// filePath := "../../files/test.txt"
 
 	filePath := os.Args[1]
 	file, err := os.Open(filePath)
