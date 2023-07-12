@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const goOutNum = 11
+const clientSeat = 12
 const errorNum = 13
 
 type Club struct {
@@ -103,7 +105,7 @@ func (c *Club) HandleClientLeave(t time.Time, name string) error {
 				c.WaitingQueue = c.WaitingQueue[1:]
 
 				c.HandleClientSeat(t, clientName, tableNum)
-				fmt.Printf("%s %d %s %d\n", t.Format(time.TimeOnly)[:5], 12, clientName, tableNum)
+				fmt.Printf("%s %d %s %d\n", t.Format(time.TimeOnly)[:5], clientSeat, clientName, tableNum)
 				c.Tables -= 1
 				break
 			}
@@ -127,7 +129,7 @@ func (c *Club) HandleLastClient(t time.Time, name string) {
 
 	c.WaitingQueue = c.WaitingQueue[:0]
 
-	fmt.Printf("%s %d %s\n", c.CloseTime.Format(time.TimeOnly)[:5], 11, name)
+	fmt.Printf("%s %d %s\n", c.CloseTime.Format(time.TimeOnly)[:5], goOutNum, name)
 }
 
 func (c *Club) CalculateRevenue() {
