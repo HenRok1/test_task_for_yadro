@@ -117,14 +117,18 @@ func (c *Club) HandleClientLeave(t time.Time, name string) error {
 	return nil
 }
 
-func (c *Club) HandleLastClient(t time.Time, name string) error {
-	for c.ClientTable[name] != 0 {
-		err := c.HandleClientLeave(t, name)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+func (c *Club) HandleLastClient(t time.Time, name string) {
+	delete(c.CurrentClients, name)
+
+	c.TableFree[c.ClientTable[name]] = true
+
+	c.ClientTable[name] = 0
+
+	c.Tables += 1
+
+	c.WaitingQueue = c.WaitingQueue[:0]
+
+	fmt.Printf("%s %d %s\n", c.CloseTime.Format(time.TimeOnly)[:5], 11, name)
 }
 
 func (c *Club) CalculateRevenue() {
@@ -137,7 +141,7 @@ func (c *Club) CalculateRevenue() {
 	}
 }
 
-func (c *Club) PrintClubStatus() {
+func (c *Club) PrintClubRevenue() {
 	fmt.Println(c.CloseTime.Format(time.TimeOnly)[:5])
 
 	tables := make([]int, 0)
@@ -154,8 +158,8 @@ func (c *Club) PrintClubStatus() {
 }
 
 func (c *Club) HandleEvents(scanner *bufio.Scanner) {
-	fmt.Println("c.Tables = ", c.Tables)
-	// c.Tables = 0
+
+	fmt.Println(c.OpenTime.Format(time.TimeOnly)[:5])
 
 	for table := 0; table < c.Tables; table++ {
 		c.TableFree[table+1] = true
@@ -185,9 +189,13 @@ func (c *Club) HandleEvents(scanner *bufio.Scanner) {
 		c.HandleEventCode(eventCode, event, t, line)
 	}
 
+	for name := range c.CurrentClients {
+		c.HandleLastClient(c.CloseTime, name)
+	}
+
 	c.CalculateRevenue()
 	// fmt.Println(club.Revenue)
-	c.PrintClubStatus()
+	c.PrintClubRevenue()
 }
 
 func (c *Club) HandleEventCode(evenCode int, event []string, t time.Time, line string) (err error) {
