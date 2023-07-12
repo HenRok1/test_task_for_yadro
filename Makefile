@@ -5,7 +5,6 @@ run:
 
 build:
 	go build cmd/app/main.go
-	./main files/test2.txt
 
 clean:
 	rm ./main
