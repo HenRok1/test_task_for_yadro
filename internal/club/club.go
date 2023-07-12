@@ -21,6 +21,8 @@ type Club struct {
 	WaitingQueue    []string
 	TableOccupation map[int]time.Duration
 	Revenue         int
+	TableFree       map[int]bool
+	ClientTable     map[string]int
 }
 
 func NewClub(tables int, openTime, closeTime time.Time, tablePrice int) *Club {
@@ -33,6 +35,8 @@ func NewClub(tables int, openTime, closeTime time.Time, tablePrice int) *Club {
 		WaitingQueue:    make([]string, 0),
 		TableOccupation: make(map[int]time.Duration),
 		Revenue:         0,
+		TableFree:       make(map[int]bool),
+		ClientTable:     map[string]int{},
 	}
 }
 
@@ -52,20 +56,24 @@ func (c *Club) HandleClientSeat(t time.Time, name string, tableNumber int) (errN
 	if _, ok := c.CurrentClients[name]; !ok {
 		return errorNum, errors.New("ClientUnknown")
 	}
-	if c.TableOccupation[tableNumber] > 0 && c.TableOccupation[tableNumber] <= c.CloseTime.Sub(c.OpenTime) {
+	if !c.TableFree[tableNumber] && c.TableOccupation[tableNumber] <= c.CloseTime.Sub(c.OpenTime) {
 		return errorNum, errors.New("PlaceIsBusy")
 	}
 	//TODO: NEED TO FIX
 	if c.TableOccupation[tableNumber] == 0 {
 		duration := t.Sub(c.OpenTime)
 		c.TableOccupation[tableNumber] = duration
-		fmt.Printf("Duration %v: %v\n", tableNumber, duration)
+		// fmt.Printf("Duration %v: %v\n", tableNumber, duration)
 
 	} else {
 		duration := t.Sub(c.OpenTime) - c.TableOccupation[tableNumber]
-		fmt.Println("Duration 2: ", duration)
+		// fmt.Println("Duration 2: ", duration)
 		c.TableOccupation[tableNumber] += duration
 	}
+
+	c.TableFree[tableNumber] = false
+
+	c.ClientTable[name] = tableNumber
 
 	c.Tables -= 1
 	c.CurrentClients[name] = true
@@ -88,19 +96,34 @@ func (c *Club) HandleClientLeave(t time.Time, name string) error {
 	}
 	delete(c.CurrentClients, name)
 
-	for tableNum, occupiedDuration := range c.TableOccupation {
-		if occupiedDuration == 0 {
+	c.TableFree[c.ClientTable[name]] = true
+	c.ClientTable[name] = 0
+
+	for tableNum := range c.TableOccupation {
+		if c.TableFree[tableNum] {
 			if len(c.WaitingQueue) > 0 {
 				clientName := c.WaitingQueue[0]
 				c.WaitingQueue = c.WaitingQueue[1:]
 
 				c.HandleClientSeat(t, clientName, tableNum)
+				fmt.Printf("%s %d %s %d\n", t.Format(time.TimeOnly)[:5], 12, clientName, tableNum)
+				c.Tables -= 1
 				break
 			}
 		}
 	}
 	c.Tables += 1
 
+	return nil
+}
+
+func (c *Club) HandleLastClient(t time.Time, name string) error {
+	for c.ClientTable[name] != 0 {
+		err := c.HandleClientLeave(t, name)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -115,7 +138,7 @@ func (c *Club) CalculateRevenue() {
 }
 
 func (c *Club) PrintClubStatus() {
-	fmt.Println(c.CloseTime.Format(time.TimeOnly))
+	fmt.Println(c.CloseTime.Format(time.TimeOnly)[:5])
 
 	tables := make([]int, 0)
 	for tableNum := range c.TableOccupation {
@@ -133,6 +156,10 @@ func (c *Club) PrintClubStatus() {
 func (c *Club) HandleEvents(scanner *bufio.Scanner) {
 	fmt.Println("c.Tables = ", c.Tables)
 	// c.Tables = 0
+
+	for table := 0; table < c.Tables; table++ {
+		c.TableFree[table+1] = true
+	}
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -200,6 +227,7 @@ func (c *Club) HandleEventCode(evenCode int, event []string, t time.Time, line s
 		fmt.Printf("Неизвестный код события на строке: %s\n", line)
 		return
 	}
+
 	return nil
 }
 
