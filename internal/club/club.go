@@ -20,6 +20,7 @@ type Club struct {
 	CurrentClients  map[string]bool
 	WaitingQueue    []string
 	TableOccupation map[int]time.Duration
+	HourForTableUse map[int]int
 	Revenue         map[int]int
 	TableFree       map[int]bool
 	ClientTable     map[string]int
@@ -36,6 +37,7 @@ func NewClub(tables int, openTime, closeTime time.Time, tablePrice int) *Club {
 		CurrentClients:  make(map[string]bool),
 		WaitingQueue:    make([]string, 0),
 		TableOccupation: make(map[int]time.Duration),
+		HourForTableUse: make(map[int]int),
 		Revenue:         make(map[int]int),
 		TableFree:       make(map[int]bool),
 		ClientTable:     make(map[string]int),
@@ -100,6 +102,14 @@ func (c *Club) HandleClientLeave(t time.Time, name string) error {
 
 	c.TableOccupation[c.ClientTable[name]] += c.EndTableUse[c.ClientTable[name]].Sub(c.StartTableUse[c.ClientTable[name]])
 
+	for tableNum, duration := range c.TableOccupation {
+		c.HourForTableUse[tableNum] = int(duration.Hours())
+		if duration-(time.Duration(c.HourForTableUse[tableNum])*time.Hour) > 0 {
+			c.HourForTableUse[tableNum]++
+		}
+		fmt.Println(duration)
+	}
+
 	// fmt.Printf("TableOccupation[%d] = %v\n", c.ClientTable[name], c.TableOccupation[c.ClientTable[name]])
 
 	c.TableFree[c.ClientTable[name]] = true
@@ -128,6 +138,13 @@ func (c *Club) HandleLastClient(t time.Time, name string) {
 
 	c.TableOccupation[c.ClientTable[name]] = t.Sub(c.StartTableUse[c.ClientTable[name]])
 
+	for tableNum, duration := range c.TableOccupation {
+		c.HourForTableUse[tableNum] = int(duration.Hours())
+		if duration-(time.Duration(c.HourForTableUse[tableNum])*time.Hour) > 0 {
+			c.HourForTableUse[tableNum]++
+		}
+	}
+
 	c.TableFree[c.ClientTable[name]] = true
 
 	c.ClientTable[name] = 0
@@ -139,13 +156,9 @@ func (c *Club) HandleLastClient(t time.Time, name string) {
 	fmt.Printf("%s %d %s\n", c.CloseTime.Format(time.TimeOnly)[:5], 11, name)
 }
 
-func (c *Club) CalculateRevenue(name string) {
-	for _, duration := range c.TableOccupation {
-		hours := int(duration.Hours())
-		if duration-(time.Duration(hours)*time.Hour) > 0 {
-			hours++
-		}
-		c.Revenue[c.ClientTable[name]] += hours * c.TablePrice
+func (c *Club) CalculateRevenue() {
+	for tableNum, hour := range c.HourForTableUse {
+		c.Revenue[tableNum] += hour * c.TablePrice
 	}
 }
 
@@ -199,8 +212,8 @@ func (c *Club) HandleEvents(scanner *bufio.Scanner) {
 
 	for name := range c.CurrentClients {
 		c.HandleLastClient(c.CloseTime, name)
-		c.CalculateRevenue(name)
 	}
+	c.CalculateRevenue()
 
 	c.PrintClubRevenue()
 }
