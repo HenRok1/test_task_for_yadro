@@ -13,14 +13,13 @@ import (
 const errorNum = 13
 
 type Club struct {
-	Tables          int
+	Tables          int //Количество столов
 	OpenTime        time.Time
 	CloseTime       time.Time
 	TablePrice      int
-	CurrentClients  map[string]bool
+	CurrentClients  map[string]bool //Находится ли в клубе клиент
 	WaitingQueue    []string
-	TableOccupation map[int]time.Duration
-	HourForTableUse map[int]int
+	TableOccupation map[int]time.Duration //Количество времени за столом
 	Revenue         map[int]int
 	TableFree       map[int]bool
 	ClientTable     map[string]int
@@ -37,7 +36,6 @@ func NewClub(tables int, openTime, closeTime time.Time, tablePrice int) *Club {
 		CurrentClients:  make(map[string]bool),
 		WaitingQueue:    make([]string, 0),
 		TableOccupation: make(map[int]time.Duration),
-		HourForTableUse: make(map[int]int),
 		Revenue:         make(map[int]int),
 		TableFree:       make(map[int]bool),
 		ClientTable:     make(map[string]int),
@@ -66,10 +64,7 @@ func (c *Club) HandleClientSeat(t time.Time, name string, tableNumber int) (errN
 		return errorNum, errors.New("PlaceIsBusy")
 	}
 
-	//TODO: NEED TO FIX
-
 	c.StartTableUse[tableNumber] = t
-	// fmt.Printf("StartTableUse[%d] = %v\n", tableNumber, c.StartTableUse[tableNumber].Format(time.TimeOnly)[:5])
 
 	c.TableFree[tableNumber] = false
 
@@ -98,13 +93,6 @@ func (c *Club) HandleClientLeave(t time.Time, name string) error {
 
 	c.TableOccupation[c.ClientTable[name]] += c.EndTableUse[c.ClientTable[name]].Sub(c.StartTableUse[c.ClientTable[name]])
 
-	for tableNum, duration := range c.TableOccupation {
-		c.HourForTableUse[tableNum] = int(duration.Hours())
-		if duration-(time.Duration(c.HourForTableUse[tableNum])*time.Hour) > 0 {
-			c.HourForTableUse[tableNum]++
-		}
-	}
-
 	c.TableFree[c.ClientTable[name]] = true
 	c.ClientTable[name] = 0
 
@@ -131,13 +119,6 @@ func (c *Club) HandleLastClient(t time.Time, name string) {
 
 	c.TableOccupation[c.ClientTable[name]] = t.Sub(c.StartTableUse[c.ClientTable[name]])
 
-	for tableNum, duration := range c.TableOccupation {
-		c.HourForTableUse[tableNum] = int(duration.Hours())
-		if duration-(time.Duration(c.HourForTableUse[tableNum])*time.Hour) > 0 {
-			c.HourForTableUse[tableNum]++
-		}
-	}
-
 	c.TableFree[c.ClientTable[name]] = true
 
 	c.ClientTable[name] = 0
@@ -150,8 +131,12 @@ func (c *Club) HandleLastClient(t time.Time, name string) {
 }
 
 func (c *Club) CalculateRevenue() {
-	for tableNum, hour := range c.HourForTableUse {
-		c.Revenue[tableNum] += hour * c.TablePrice
+	for tableNum, duration := range c.TableOccupation {
+		hours := int(duration.Hours())
+		if duration-(time.Duration(hours)*time.Hour) > 0 {
+			hours++
+		}
+		c.Revenue[tableNum] += hours * c.TablePrice
 	}
 }
 
@@ -182,7 +167,6 @@ func (c *Club) HandleEvents(scanner *bufio.Scanner) {
 	for scanner.Scan() {
 		line := scanner.Text()
 		event := strings.Fields(line)
-		// Проверка формата входных данных
 		if len(event) < 3 {
 			fmt.Printf("Ошибка формата на строке: %s\n", line)
 			return

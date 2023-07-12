@@ -37,7 +37,5 @@ func main() {
 
 	myClub := club.NewClub(numTables, openTime, closeTime, payCost)
 
-	// fmt.Println(openCloseTimes[0])
-
 	myClub.HandleEvents(scanner)
 }
