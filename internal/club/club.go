@@ -80,10 +80,8 @@ func (c *Club) HandleClientSeat(t time.Time, name string, tableNumber int) (errN
 	return 0, nil
 }
 
-// TODO: переделать
 func (c *Club) HandleClientWait(t time.Time, name string) (errNum int, err error) {
 	if c.Tables > 0 {
-		// c.HandleClientLeave(t, name)
 		return errorNum, errors.New("ICanWaitNoLonger")
 	}
 	c.WaitingQueue = append(c.WaitingQueue, name)
@@ -98,8 +96,6 @@ func (c *Club) HandleClientLeave(t time.Time, name string) error {
 
 	c.EndTableUse[c.ClientTable[name]] = t
 
-	// fmt.Printf("EndTableUse[%d] = %v\n", c.ClientTable[name], c.EndTableUse[c.ClientTable[name]].Format(time.TimeOnly)[:5])
-
 	c.TableOccupation[c.ClientTable[name]] += c.EndTableUse[c.ClientTable[name]].Sub(c.StartTableUse[c.ClientTable[name]])
 
 	for tableNum, duration := range c.TableOccupation {
@@ -107,10 +103,7 @@ func (c *Club) HandleClientLeave(t time.Time, name string) error {
 		if duration-(time.Duration(c.HourForTableUse[tableNum])*time.Hour) > 0 {
 			c.HourForTableUse[tableNum]++
 		}
-		fmt.Println(duration)
 	}
-
-	// fmt.Printf("TableOccupation[%d] = %v\n", c.ClientTable[name], c.TableOccupation[c.ClientTable[name]])
 
 	c.TableFree[c.ClientTable[name]] = true
 	c.ClientTable[name] = 0
@@ -210,9 +203,18 @@ func (c *Club) HandleEvents(scanner *bufio.Scanner) {
 		c.HandleEventCode(eventCode, event, t, line)
 	}
 
+	names := make([]string, 0)
+
 	for name := range c.CurrentClients {
-		c.HandleLastClient(c.CloseTime, name)
+		names = append(names, name)
 	}
+
+	sort.Strings(names)
+
+	for _, nameVal := range names {
+		c.HandleLastClient(c.CloseTime, nameVal)
+	}
+
 	c.CalculateRevenue()
 
 	c.PrintClubRevenue()
