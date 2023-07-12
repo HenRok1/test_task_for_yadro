@@ -8,3 +8,9 @@ build:
 
 clean:
 	rm ./main
+
+docker:
+	docker build -t test_task .
+
+docker_run:
+	docker run -p 8080:8080 test_task
